@@ -1,7 +1,7 @@
 {
   "name": "mern-ecommorce",
   "version": "1.0.0",
-  "description": "eCommerce web application built with MERN Stack.",
+  "description": "my ecommerce build using mern stack",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -13,8 +13,6 @@
     "data:destroy": "node backend/seeder.js -d",
     "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
   },
-  "author": "Ajay Boro",
-  "license": "MIT",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "colors": "^1.4.0",
