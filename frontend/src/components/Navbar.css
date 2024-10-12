@@ -1,0 +1,37 @@
+.search-container {
+  flex: 1; /* Allow the search box to grow */
+  max-width: 500px; /* Increase max width for the search box */
+  margin: 0 20px; /* Add horizontal margins for spacing */
+  margin-left: 250px;
+  display: flex;
+  justify-content: center; /* Center the search box */
+}
+
+.navbar {
+  background-color: #8fbce9; /* Dark background color */
+}
+
+.navbar-brand {
+  font-weight: bold; /* Make brand name bold */
+}
+
+.nav-link,
+.nav-dropdown-item {
+  transition: color 0.3s; /* Smooth transition for hover effect */
+}
+
+.nav-link:hover,
+.nav-dropdown-item:hover {
+  color: #ffc107; /* Change color on hover */
+}
+
+.navbar-dark .navbar-nav .nav-link.active {
+  color: #ffc107; /* Active link color */
+}
+
+@media (max-width: 768px) {
+  .search-container {
+    max-width: 100%; /* Full width on smaller screens */
+    margin: 0; /* Remove margins */
+  }
+}

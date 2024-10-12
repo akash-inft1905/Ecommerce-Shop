@@ -1,26 +1,34 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Carousel, Image } from 'react-bootstrap';
-import { useGetTopProductsQuery } from '../slices/productsApiSlice';
-import { addCurrency } from '../utils/addCurrency';
-import Loader from './Loader';
-import Message from './Message';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Carousel, Image } from "react-bootstrap";
+import { useGetTopProductsQuery } from "../slices/productsApiSlice";
+import { addCurrency } from "../utils/addCurrency";
+import Loader from "./Loader";
+import Message from "./Message";
 
 const ProductCarousel = () => {
   const { data: products } = useGetTopProductsQuery();
+  console.log(products);
+  const getImageUrl = (imagePath) => {
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? "http://your-production-url.com"
+        : "http://localhost:5000";
+    return `${baseUrl}${imagePath}`;
+  };
   return (
-    <Carousel fade className='text-center bg-secondary mb-5 z-0'>
-      {products?.map(product => (
+    <Carousel fade className="text-center bg-secondary mb-5 z-0">
+      {products?.map((product) => (
         <Carousel.Item key={product._id} interval={3000}>
           <Link to={`/product/${product._id}`}>
             <Image
-              src={product.image}
+              src={getImageUrl(product.image)}
               alt={product.name}
               fluid
-              style={{ height: '500px' }}
+              style={{ height: "500px" }}
             />
-            <Carousel.Caption className='pb-5 px-5 '>
-              <h3 className='product-title'>{product.name}</h3>
+            <Carousel.Caption className="pb-5 px-5 ">
+              <h3 className="product-title">{product.name}</h3>
               <h1>{addCurrency(product.price)}</h1>
             </Carousel.Caption>
           </Link>

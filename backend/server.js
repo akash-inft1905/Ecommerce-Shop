@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const __dirname = path.resolve(); // Set {__dirname} to current working directory
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/dummyImages", express.static(path.join(__dirname, "dummyImages")));
 
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/users", userRoutes);
