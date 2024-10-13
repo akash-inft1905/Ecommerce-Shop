@@ -81,24 +81,21 @@ const getProduct = async (req, res, next) => {
 // @access   Private/Admin
 const createProduct = async (req, res, next) => {
   try {
-    const { name, description, brand, category, price, countInStock } =
+    const { name, image, description, brand, category, price, countInStock } =
       req.body;
-
-    // Cloudinary image upload
-    const result = await cloudinary.uploader.upload(req.file.path);
-
+    console.log(req.file);
     const product = new Product({
       user: req.user._id,
       name,
-      image: result.secure_url, // Cloudinary URL
+      image,
       description,
       brand,
       category,
       price,
       countInStock,
     });
-
     const createdProduct = await product.save();
+
     res.status(200).json({ message: "Product created", createdProduct });
   } catch (error) {
     next(error);
@@ -111,7 +108,7 @@ const createProduct = async (req, res, next) => {
 // @access   Private/Admin
 const updateProduct = async (req, res, next) => {
   try {
-    const { name, description, brand, category, price, countInStock } =
+    const { name, image, description, brand, category, price, countInStock } =
       req.body;
 
     const product = await Product.findById(req.params.id);
@@ -121,21 +118,11 @@ const updateProduct = async (req, res, next) => {
       throw new Error("Product not found!");
     }
 
-    // Check if a new image is being uploaded
-    let imageUrl = product.image;
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path);
-      imageUrl = result.secure_url;
-
-      // Optional: Remove previous image from Cloudinary if desired
-      if (product.image && product.image !== imageUrl) {
-        const publicId = product.image.split("/").pop().split(".")[0]; // Extract public ID
-        await cloudinary.uploader.destroy(publicId); // Delete previous image
-      }
-    }
+    // Save the current image path before updating
+    const previousImage = product.image;
 
     product.name = name || product.name;
-    product.image = imageUrl;
+    product.image = image || product.image;
     product.description = description || product.description;
     product.brand = brand || product.brand;
     product.category = category || product.category;
@@ -143,6 +130,12 @@ const updateProduct = async (req, res, next) => {
     product.countInStock = countInStock || product.countInStock;
 
     const updatedProduct = await product.save();
+
+    // Delete the previous image if it exists and if it's different from the new image
+    if (previousImage && previousImage !== updatedProduct.image) {
+      deleteFile(previousImage);
+    }
+
     res.status(200).json({ message: "Product updated", updatedProduct });
   } catch (error) {
     next(error);
@@ -162,14 +155,9 @@ const deleteProduct = async (req, res, next) => {
       res.statusCode = 404;
       throw new Error("Product not found!");
     }
-
-    // Delete the product image from Cloudinary
-    if (product.image) {
-      const publicId = product.image.split("/").pop().split(".")[0]; // Extract public ID
-      await cloudinary.uploader.destroy(publicId); // Delete image
-    }
-
     await Product.deleteOne({ _id: product._id });
+    deleteFile(product.image); // Remove upload file
+
     res.status(200).json({ message: "Product deleted" });
   } catch (error) {
     next(error);

@@ -1,4 +1,4 @@
-import express from "express";
+import express, { query } from "express";
 import {
   getProducts,
   getProduct,
@@ -11,29 +11,9 @@ import {
 import { protect, admin } from "../middleware/authMiddleware.js";
 import validateRequest from "../middleware/validator.js";
 import { body, check, param } from "express-validator";
-import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "cloudinary";
 
-// Configure Cloudinary
-cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const router = express.Router();
 
-// Set up Cloudinary storage
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary.v2,
-  params: {
-    folder: "products", // Your folder name in Cloudinary
-    allowedFormats: ["jpg", "png", "jpeg"],
-  },
-});
-
-const upload = multer({ storage });
-
-// Validation schema
 const validator = {
   getProducts: [
     check("limit")
@@ -56,6 +36,7 @@ const validator = {
   ],
   createProduct: [
     check("name").trim().notEmpty().withMessage("Name is required").escape(),
+    check("image").notEmpty().withMessage("Image is required"),
     check("description")
       .trim()
       .notEmpty()
@@ -108,6 +89,7 @@ const validator = {
   ],
   updateProduct: [
     check("name").trim().notEmpty().withMessage("Name is required").escape(),
+    check("image").notEmpty().withMessage("Image is required"),
     check("description")
       .trim()
       .notEmpty()
@@ -137,24 +119,11 @@ const validator = {
   ],
 };
 
-// Define routes
-const router = express.Router();
-
-// Add image upload middleware in createProduct and updateProduct routes
 router
   .route("/")
-  .post(
-    upload.single("image"),
-    validator.createProduct,
-    validateRequest,
-    protect,
-    admin,
-    createProduct
-  )
+  .post(validator.createProduct, validateRequest, protect, admin, createProduct)
   .get(validator.getProducts, validateRequest, getProducts);
-
 router.get("/top", getTopProducts);
-
 router.post(
   "/reviews/:id",
   validator.createProductReview,
@@ -162,18 +131,10 @@ router.post(
   protect,
   createProductReview
 );
-
 router
   .route("/:id")
   .get(validator.getProduct, validateRequest, getProduct)
-  .put(
-    upload.single("image"),
-    validator.updateProduct,
-    validateRequest,
-    protect,
-    admin,
-    updateProduct
-  )
+  .put(validator.updateProduct, validateRequest, protect, admin, updateProduct)
   .delete(
     validator.deleteProduct,
     validateRequest,
