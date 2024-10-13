@@ -1,5 +1,5 @@
-import Product from '../models/productModel.js';
-import { deleteFile } from '../utils/file.js';
+import Product from "../models/productModel.js";
+import { deleteFile } from "../utils/file.js";
 
 // @desc     Fetch All Products
 // @method   GET
@@ -12,24 +12,24 @@ const getProducts = async (req, res, next) => {
     const maxSkip = total === 0 ? 0 : total - 1;
     const limit = Number(req.query.limit) || maxLimit;
     const skip = Number(req.query.skip) || 0;
-    const search = req.query.search || '';
+    const search = req.query.search || "";
 
     const products = await Product.find({
-      name: { $regex: search, $options: 'i' }
+      name: { $regex: search, $options: "i" },
     })
       .limit(limit > maxLimit ? maxLimit : limit)
       .skip(skip > maxSkip ? maxSkip : skip < 0 ? 0 : skip);
 
     if (!products || products.length === 0) {
       res.statusCode = 404;
-      throw new Error('Products not found!');
+      throw new Error("Products not found!");
     }
 
     res.status(200).json({
       products,
       total,
       maxLimit,
-      maxSkip
+      maxSkip,
     });
   } catch (error) {
     next(error);
@@ -46,7 +46,7 @@ const getTopProducts = async (req, res, next) => {
 
     if (!products) {
       res.statusCode = 404;
-      throw new Error('Product not found!');
+      throw new Error("Product not found!");
     }
 
     res.status(200).json(products);
@@ -66,7 +66,7 @@ const getProduct = async (req, res, next) => {
 
     if (!product) {
       res.statusCode = 404;
-      throw new Error('Product not found!');
+      throw new Error("Product not found!");
     }
 
     res.status(200).json(product);
@@ -81,22 +81,25 @@ const getProduct = async (req, res, next) => {
 // @access   Private/Admin
 const createProduct = async (req, res, next) => {
   try {
-    const { name, image, description, brand, category, price, countInStock } =
+    const { name, description, brand, category, price, countInStock } =
       req.body;
-    console.log(req.file);
+
+    // Cloudinary image upload
+    const result = await cloudinary.uploader.upload(req.file.path);
+
     const product = new Product({
       user: req.user._id,
       name,
-      image,
+      image: result.secure_url, // Cloudinary URL
       description,
       brand,
       category,
       price,
-      countInStock
+      countInStock,
     });
-    const createdProduct = await product.save();
 
-    res.status(200).json({ message: 'Product created', createdProduct });
+    const createdProduct = await product.save();
+    res.status(200).json({ message: "Product created", createdProduct });
   } catch (error) {
     next(error);
   }
@@ -108,21 +111,31 @@ const createProduct = async (req, res, next) => {
 // @access   Private/Admin
 const updateProduct = async (req, res, next) => {
   try {
-    const { name, image, description, brand, category, price, countInStock } =
+    const { name, description, brand, category, price, countInStock } =
       req.body;
 
     const product = await Product.findById(req.params.id);
 
     if (!product) {
       res.statusCode = 404;
-      throw new Error('Product not found!');
+      throw new Error("Product not found!");
     }
 
-    // Save the current image path before updating
-    const previousImage = product.image;
+    // Check if a new image is being uploaded
+    let imageUrl = product.image;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path);
+      imageUrl = result.secure_url;
+
+      // Optional: Remove previous image from Cloudinary if desired
+      if (product.image && product.image !== imageUrl) {
+        const publicId = product.image.split("/").pop().split(".")[0]; // Extract public ID
+        await cloudinary.uploader.destroy(publicId); // Delete previous image
+      }
+    }
 
     product.name = name || product.name;
-    product.image = image || product.image;
+    product.image = imageUrl;
     product.description = description || product.description;
     product.brand = brand || product.brand;
     product.category = category || product.category;
@@ -130,13 +143,7 @@ const updateProduct = async (req, res, next) => {
     product.countInStock = countInStock || product.countInStock;
 
     const updatedProduct = await product.save();
-
-    // Delete the previous image if it exists and if it's different from the new image
-    if (previousImage && previousImage !== updatedProduct.image) {
-      deleteFile(previousImage);
-    }
-
-    res.status(200).json({ message: 'Product updated', updatedProduct });
+    res.status(200).json({ message: "Product updated", updatedProduct });
   } catch (error) {
     next(error);
   }
@@ -153,12 +160,17 @@ const deleteProduct = async (req, res, next) => {
 
     if (!product) {
       res.statusCode = 404;
-      throw new Error('Product not found!');
+      throw new Error("Product not found!");
     }
-    await Product.deleteOne({ _id: product._id });
-    deleteFile(product.image); // Remove upload file
 
-    res.status(200).json({ message: 'Product deleted' });
+    // Delete the product image from Cloudinary
+    if (product.image) {
+      const publicId = product.image.split("/").pop().split(".")[0]; // Extract public ID
+      await cloudinary.uploader.destroy(publicId); // Delete image
+    }
+
+    await Product.deleteOne({ _id: product._id });
+    res.status(200).json({ message: "Product deleted" });
   } catch (error) {
     next(error);
   }
@@ -177,23 +189,23 @@ const createProductReview = async (req, res, next) => {
 
     if (!product) {
       res.statusCode = 404;
-      throw new Error('Product not found!');
+      throw new Error("Product not found!");
     }
 
     const alreadyReviewed = product.reviews.find(
-      review => review.user._id.toString() === req.user._id.toString()
+      (review) => review.user._id.toString() === req.user._id.toString()
     );
 
     if (alreadyReviewed) {
       res.statusCode = 400;
-      throw new Error('Product already reviewed');
+      throw new Error("Product already reviewed");
     }
 
     const review = {
       user: req.user,
       name: req.user.name,
       rating: Number(rating),
-      comment
+      comment,
     };
 
     product.reviews = [...product.reviews, review];
@@ -205,7 +217,7 @@ const createProductReview = async (req, res, next) => {
 
     await product.save();
 
-    res.status(201).json({ message: 'Review added' });
+    res.status(201).json({ message: "Review added" });
   } catch (error) {
     next(error);
   }
@@ -218,5 +230,5 @@ export {
   updateProduct,
   deleteProduct,
   createProductReview,
-  getTopProducts
+  getTopProducts,
 };

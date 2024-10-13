@@ -22,7 +22,7 @@ const ProductCarousel = () => {
         <Carousel.Item key={product._id} interval={3000}>
           <Link to={`/product/${product._id}`}>
             <Image
-              src={getImageUrl(product.image)}
+              src={product.image}
               alt={product.name}
               fluid
               style={{ height: "500px" }}

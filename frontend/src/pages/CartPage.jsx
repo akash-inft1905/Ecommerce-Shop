@@ -81,7 +81,7 @@ const CartPage = () => {
                 <Row style={{ alignItems: "center" }}>
                   <Col md={2}>
                     <Image
-                      src={getImageUrl(item.image)}
+                      src={item.image}
                       alt={item.name}
                       fluid
                       rounded

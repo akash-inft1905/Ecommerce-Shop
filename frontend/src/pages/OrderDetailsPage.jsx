@@ -181,7 +181,7 @@ const OrderDetailsPage = () => {
                         <Row>
                           <Col md={2}>
                             <Image
-                              src={getImageUrl(item.image)}
+                              src={item.image}
                               alt={item.name}
                               fluid
                               rounded

@@ -34,7 +34,7 @@ const Product = ({ product }) => {
       >
         <Card.Img
           variant="top"
-          src={getImageUrl(product.image)}
+          src={product.image}
           style={{ height: "200px", objectFit: "contain" }}
         />
         <Card.Body>

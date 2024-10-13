@@ -92,12 +92,7 @@ const PlaceOrderPage = () => {
                 {cartItems.map((item) => (
                   <ListGroup.Item key={item._id} className="flex items-center">
                     <Col md={2}>
-                      <Image
-                        src={getImageUrl(item.image)}
-                        alt={item.name}
-                        fluid
-                        rounded
-                      />
+                      <Image src={item.image} alt={item.name} fluid rounded />
                     </Col>
                     <Col md={6}>
                       <Link

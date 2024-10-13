@@ -95,7 +95,7 @@ const ProductPage = () => {
           <Row>
             <Col md={5}>
               <Image
-                src={getImageUrl(product.image)}
+                src={product.image}
                 alt={product.name}
                 fluid
                 className="rounded-lg shadow-lg"
