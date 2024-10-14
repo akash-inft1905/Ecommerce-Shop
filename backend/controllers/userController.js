@@ -272,7 +272,7 @@ const resetPasswordRequest = async (req, res, next) => {
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "15m",
     });
-    const passwordResetLink = `https://mern-ecom-by-ak.onrender.com/reset-password/${user._id}/${token}`;
+    const passwordResetLink = `https://ecommerce-shop-ools.onrender.com/reset-password/${user._id}/${token}`;
     console.log(passwordResetLink);
     await transporter.sendMail({
       from: `"Shop" ${process.env.EMAIL_FROM}`, // sender address
